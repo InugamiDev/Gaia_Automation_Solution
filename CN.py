@@ -19,9 +19,8 @@ base_url = 'https://gaia.cs.umass.edu/kurose_ross/knowledgechecks/problem.php?c=
 
 #Chỗ này fill chapter và section vào
 chapters_sections = {
-  4: [1, 3, 4],
-  5: [1, 2, 3, 4, 6],
-  6: [1, 2, 3, 4]
+  6:[1,2,3,4],
+  7: [1,2,3,4],
 }
 
 
@@ -46,17 +45,28 @@ def scroll_to_bottom():
 for url in urls:
   chapter = url.split('c=')[1].split('&')[0]
   section = url.split('s=')[1].split('&')[0] if '&' in url.split('s=')[1] else url.split('s=')[1]
-
+  
+  print(f"\nProcessing Chapter {chapter} Section {section}")
   driver.get(url)
-
-  wait = WebDriverWait(driver, 20)  
-  wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '#question1 > form > span')))
-
-  question_text = driver.find_element(By.CSS_SELECTOR, '#question1 > form > span').text
-  total_questions = int(question_text.split('/')[1])
+  wait = WebDriverWait(driver, 30)
+  
+  try:
+    question_span = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '#question1 > form > span')))
+    question_text = question_span.text
+    total_questions = int(question_text.split('/')[1])
+    print(f"Found {total_questions} questions")
+  except Exception as e:
+    print(f"ERROR: Failed to process Chapter {chapter} Section {section}")
+    print(f"Reason: {str(e)}")
+    continue
 
   for i in range(1, total_questions + 1):
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, f'#question{i}')))
+    try:
+      wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, f'#question{i}')))
+    except Exception as e:
+      print(f"ERROR: Failed on Chapter {chapter} Section {section} Question {i}")
+      print(f"Reason: {str(e)}")
+      continue
 
     question_element = driver.find_element(By.CSS_SELECTOR, f'#question{i}')
     scroll_to_element(question_element)
